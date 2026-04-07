@@ -3,7 +3,7 @@
  * ML/behavior features still use tracker (session); this complements “user library” UX.
  */
 
-const WISHLIST = 'pageturner_wishlist_ids';
+const WISHLIST_BOOKS = 'pageturner_wishlist_books';
 const PRICE_ALERTS = 'pageturner_price_alerts';
 const READING = 'pageturner_reading_progress';
 const REVIEWS = 'pageturner_book_reviews';
@@ -22,20 +22,24 @@ function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-export function getWishlistIds() {
-  return readJson(WISHLIST, []);
+export function getWishlistBooks() {
+  return readJson(WISHLIST_BOOKS, []);
 }
 
-export function setWishlistIds(ids) {
-  writeJson(WISHLIST, ids);
+export function toggleWishlistBook(book) {
+  const books = getWishlistBooks();
+  const index = books.findIndex((b) => b.id === book.id);
+  if (index >= 0) {
+    books.splice(index, 1);
+  } else {
+    books.push(book);
+  }
+  writeJson(WISHLIST_BOOKS, books);
 }
 
-export function toggleWishlistId(bookId) {
-  const ids = getWishlistIds();
-  const has = ids.includes(bookId);
-  const next = has ? ids.filter((id) => id !== bookId) : [...ids, bookId];
-  setWishlistIds(next);
-  return !has;
+export function removeWishlistBook(bookId) {
+  const books = getWishlistBooks();
+  writeJson(WISHLIST_BOOKS, books.filter((b) => b.id !== bookId));
 }
 
 export function getPriceAlerts() {
