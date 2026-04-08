@@ -1,11 +1,7 @@
 import { Heart, X } from 'lucide-react';
 
-function WishlistDrawer({ open, onClose, books, wishlistIds, onBookClick, onRemove }) {
+function WishlistDrawer({ open, onClose, wishlistBooks, onBookClick, onRemove }) {
   if (!open) return null;
-
-  const items = wishlistIds
-    .map((id) => books.find((b) => b.id === id))
-    .filter(Boolean);
 
   return (
     <>
@@ -21,14 +17,13 @@ function WishlistDrawer({ open, onClose, books, wishlistIds, onBookClick, onRemo
           </button>
         </div>
         <div className="wishlist-drawer-body">
-          {items.length === 0 ? (
+          {wishlistBooks.length === 0 ? (
             <p className="wishlist-drawer-empty">
-              Tap the heart on any book to save it here. Open this menu anytime from the
-              ☰ button.
+              Tap the heart on any book to save it here
             </p>
           ) : (
             <ul className="wishlist-drawer-list">
-              {items.map((book) => (
+              {wishlistBooks.map((book) => (
                 <li key={book.id} className="wishlist-drawer-line">
                   <button
                     type="button"
