@@ -3821,12 +3821,8 @@ html[data-theme="light"] .hamburger-toggle-btn {
 .personality-header {
   text-align: center;
   padding: 40px 30px 30px;
-  background: linear-gradient(180deg, 
-    var(--profile-color) 0%, 
-    transparent 100%);
-   background-size: 100% 250px; 
+  background-size: 100% 250px; 
   background-repeat: no-repeat;
-  opacity: 0.1;
   position: relative;
 }
 
@@ -3870,11 +3866,14 @@ html[data-theme="light"] .hamburger-toggle-btn {
   margin: 0 0 25px 0;
 }
 
-.confidence-bar {
+.personality-header .confidence-bar {
   margin-top: 20px;
+  height: auto;
+  overflow: visible;
+  background: transparent;
 }
 
-.confidence-label {
+.personality-header .confidence-label {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
@@ -3882,9 +3881,11 @@ html[data-theme="light"] .hamburger-toggle-btn {
   color: #9ca3af;
 }
 
-.confidence-value {
+.personality-header .confidence-value {
   color: var(--profile-color);
   font-weight: bold;
+  font-size: 15px; /* reset the 24px clash */
+  margin-bottom: 0; /* reset the 10px clash */
 }
 
 .confidence-track {
@@ -4116,4 +4117,23 @@ html[data-theme="light"] .hamburger-toggle-btn {
 .personality-modal::-webkit-scrollbar-thumb {
   background: var(--profile-color);
   border-radius: 4px;
+}
+
+/* Buy Now Button Styles */
+.buy-now-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.buy-now-btn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.buy-now-btn:active {
+  transform: translateY(0);
 }
