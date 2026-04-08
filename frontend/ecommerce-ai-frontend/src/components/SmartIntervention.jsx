@@ -26,8 +26,8 @@ function SmartIntervention({ books, onAddToCart }) {
           message: action.message,
           urgency: action.urgency,
           discount: action.discount,
-          persona: prediction.prediction.userPersona,
-          conversionProb: prediction.prediction.conversionProbability
+          persona: prediction.userPersona,
+          conversionProb: prediction.conversionProbability
         });
       }
     }
