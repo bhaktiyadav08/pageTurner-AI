@@ -4,6 +4,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 import pickle
+import os
+import sqlite3
 import json
 
 class ModelTrainer:
@@ -204,9 +206,31 @@ if __name__ == "__main__":
     
     trainer = ModelTrainer()
     
-    # Generate synthetic data (later replace with real data!)
-    print("📊 Generating synthetic training data...")
-    df = trainer.generate_synthetic_data(n_samples=1000)
+    # Load from DB if available and has enough data
+    db_path = 'pageturner.db'
+
+    df = None
+    use_synthetic = True
+    
+    if os.path.exists(db_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            count = pd.read_sql_query("SELECT COUNT(*) as cnt FROM sessions", conn).iloc[0]['cnt']
+            if count >= 50:
+                print(f"📊 Loading {count} live sessions from database...")
+                df = pd.read_sql_query("SELECT * FROM sessions", conn)
+                df['time_to_first_cart'] = df['time_to_first_cart'].fillna(-1)
+                use_synthetic = False
+            else:
+                print(f"⚠️ Only found {count} sessions in DB, need at least 50. Falling back to synthetic data.")
+            conn.close()
+        except Exception as e:
+            print(f"⚠️ Database error: {e}. Falling back to synthetic.")
+            
+    if use_synthetic:
+        # Generate synthetic data
+        print("📊 Generating synthetic training data...")
+        df = trainer.generate_synthetic_data(n_samples=1000)
     
     # Train model
     trainer.train(df)
