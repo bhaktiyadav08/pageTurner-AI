@@ -4,9 +4,10 @@ import { Heart, Menu, X } from 'lucide-react';
 import { getBooks, searchGoogleBooks } from './services/bookService';
 import {
   getPriceAlerts,
-  getWishlistIds,
+  getWishlistBooks,
   setStoredTheme,
-  toggleWishlistId,
+  toggleWishlistBook,
+  removeWishlistBook,
 } from './utils/userLibrary';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -31,6 +32,7 @@ import TrendingSection from './components/TrendingSection';
 import WishlistDrawer from './components/WishlistDrawer';
 import { filterSortBooks } from './utils/bookDisplay';
 import tracker from './utils/tracker';
+import predictor from './utils/predictor';
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -51,7 +53,8 @@ function App() {
   const [theme, setTheme] = useState(
     () => localStorage.getItem('pageturner_theme') || 'dark'
   );
-  const [wishlistIds, setWishlistIds] = useState(() => getWishlistIds());
+  const [wishlistBooks, setWishlistBooks] = useState(() => getWishlistBooks());
+  const wishlistIds = wishlistBooks.map(b => b.id);
   const [readingVersion, setReadingVersion] = useState(0);
   const [libraryTick, setLibraryTick] = useState(0);
 
@@ -209,6 +212,12 @@ function App() {
     setCartToast(`Added to cart: ${book.title}`);
   };
 
+  const handleBuyNow = (book) => {
+    setCart((c) => [...c, book]);
+    tracker.trackAddToCart(book);
+    openCart();
+  };
+
   const handleBookClick = (book) => {
     setSelectedBook(book);
   };
@@ -248,17 +257,17 @@ function App() {
   const openWishlist = () => {
     setCartOpen(false);
     setWishlistOpen(true);
-    tracker.trackEvent('wishlist_panel_open', { items: wishlistIds.length });
+    tracker.trackEvent('wishlist_panel_open', { items: wishlistBooks.length });
   };
 
-  const toggleWishlist = (bookId) => {
-    toggleWishlistId(bookId);
-    setWishlistIds(getWishlistIds());
+  const toggleWishlist = (book) => {
+    toggleWishlistBook(book);
+    setWishlistBooks(getWishlistBooks());
   };
 
   const removeWishlist = (bookId) => {
-    toggleWishlistId(bookId);
-    setWishlistIds(getWishlistIds());
+    removeWishlistBook(bookId);
+    setWishlistBooks(getWishlistBooks());
   };
 
   const bumpLibrary = () => {
@@ -293,8 +302,8 @@ function App() {
             aria-label="Open wishlist"
           >
             <Heart size={22} />
-            {wishlistIds.length > 0 && (
-              <span className="header-menu-badge">{wishlistIds.length}</span>
+            {wishlistBooks.length > 0 && (
+              <span className="header-menu-badge">{wishlistBooks.length}</span>
             )}
           </button>
           <div className="header-top-actions">
@@ -403,6 +412,7 @@ function App() {
                 key={book.id}
                 book={book}
                 onAddToCart={handleAddToCart}
+                onBuyNow={handleBuyNow}
                 onBookClick={handleBookClick}
                 wishlisted={wishlistIds.includes(book.id)}
                 onToggleWishlist={toggleWishlist}
@@ -456,15 +466,17 @@ function App() {
         onRemove={handleRemoveCartLine}
         onCheckout={() => {
           tracker.trackEvent('checkout_demo', { items: cart.length });
-          alert('Checkout is a demo — your ML session data is still tracked.');
+          predictor.trackConversion(tracker.sessionId);
+          setCart([]);
+          alert('Checkout is a demo — your ML session data was successfully logged as a conversion!');
+          setCartOpen(false);
         }}
       />
 
       <WishlistDrawer
         open={wishlistOpen}
         onClose={() => setWishlistOpen(false)}
-        books={catalog}
-        wishlistIds={wishlistIds}
+        wishlistBooks={wishlistBooks}
         onBookClick={handleBookClick}
         onRemove={removeWishlist}
       />
@@ -477,6 +489,7 @@ function App() {
           allBooks={catalog}
           onClose={handleCloseModal}
           onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
           onSelectBook={(b) => setSelectedBook(b)}
           wishlistIds={wishlistIds}
           onToggleWishlist={toggleWishlist}
