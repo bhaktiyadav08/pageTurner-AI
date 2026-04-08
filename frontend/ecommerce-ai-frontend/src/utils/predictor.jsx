@@ -256,7 +256,25 @@ class Predictor {
       return false;
     }
   }
+
+  // Track real conversion
+  async trackConversion(sessionId) {
+    if (!this.useBackend) return;
+    try {
+      await fetch(`${API_URL}/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+      console.log('✅ Conversion tracked in backend');
+    } catch (e) {
+      console.warn('Failed to track conversion:', e);
+    }
+  }
 }
+
 
 // Create singleton
 const predictor = new Predictor();
