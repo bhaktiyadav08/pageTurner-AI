@@ -7,6 +7,9 @@ import numpy as np
 import json
 from datetime import datetime
 import pandas as pd 
+import sqlite3
+import os
+
 # Initialize FastAPI app
 app = FastAPI(
     title="PageTurner ML API",
@@ -68,6 +71,9 @@ class PredictionRequest(BaseModel):
     features: Features
     timestamp: Optional[int] = None
 
+class ConversionRequest(BaseModel):
+    session_id: str
+
 class PredictionResponse(BaseModel):
     session_id: str
     will_convert: bool
@@ -83,8 +89,42 @@ class HealthResponse(BaseModel):
     features_count: int
     version: str
 
-# Store predictions for analytics (in-memory, use database in production)
-predictions_log = []
+# Database setup
+DB_PATH = 'pageturner.db'
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS sessions (
+            session_id TEXT PRIMARY KEY,
+            total_events INTEGER,
+            session_duration_seconds INTEGER,
+            events_per_minute REAL,
+            unique_books_viewed INTEGER,
+            unique_genres_explored INTEGER,
+            books_added_to_cart INTEGER,
+            avg_hover_duration REAL,
+            total_hover_time REAL,
+            max_scroll_depth REAL,
+            genre_switches INTEGER,
+            view_to_cart_ratio REAL,
+            time_to_first_hover REAL,
+            time_to_first_cart REAL,
+            genre_entropy REAL,
+            exploration_score REAL,
+            high_engagement_books INTEGER,
+            cart_abandonment_risk REAL,
+            genre_focus_score REAL,
+            price_sensitivity REAL,
+            converted INTEGER DEFAULT 0,
+            updated_at TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 # === API ENDPOINTS ===
 
@@ -163,25 +203,63 @@ async def predict_conversion(request: PredictionRequest):
             "feature_importance": top_features
         }
         
-        # Log prediction
-        predictions_log.append({
-            **response,
-            "features": features_dict,
-            "timestamp": datetime.now().isoformat()
-        })
+        # Log to DB (UPSERT session features)
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        
+        fields = ["session_id"] + FEATURE_NAMES + ["updated_at"]
+        placeholders = ", ".join(["?"] * len(fields))
+        values = [request.session_id] + feature_values + [datetime.now().isoformat()]
+        
+        # Create the ON CONFLICT UPDATE clause
+        update_cols = ", ".join([f"{f} = excluded.{f}" for f in FEATURE_NAMES])
+        
+        query = f"""
+            INSERT INTO sessions ({", ".join(fields)}) 
+            VALUES ({placeholders})
+            ON CONFLICT(session_id) DO UPDATE SET 
+            {update_cols},
+            updated_at = excluded.updated_at
+        """
+        c.execute(query, values)
+        conn.commit()
+        conn.close()
         
         return response
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
+@app.post("/convert")
+async def track_conversion(request: ConversionRequest):
+    """Mark a session as successfully converted (purchased/checkout)"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE sessions SET converted = 1, updated_at = ? WHERE session_id = ?", 
+              (datetime.now().isoformat(), request.session_id))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "session_id": request.session_id}
+
 @app.get("/analytics/predictions")
 async def get_predictions_log():
     """Get all predictions made (for debugging)"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM sessions")
+    total = c.fetchone()[0]
+    
+    c.execute("SELECT COUNT(*) FROM sessions WHERE converted = 1")
+    conversions = c.fetchone()[0]
+    
+    c.execute("SELECT session_id, converted, updated_at FROM sessions ORDER BY updated_at DESC LIMIT 10")
+    recent = [{"session_id": r[0], "converted": bool(r[1]), "updated_at": r[2]} for r in c.fetchall()]
+    conn.close()
+
     return {
-        "total_predictions": len(predictions_log),
-        "recent_predictions": predictions_log[-10:],  # Last 10
-        "conversion_rate": sum(1 for p in predictions_log if p['will_convert']) / len(predictions_log) if predictions_log else 0
+        "total_predictions": total,
+        "recent_predictions": recent,
+        "conversion_rate": conversions / total if total > 0 else 0
     }
 
 @app.get("/model/info")
