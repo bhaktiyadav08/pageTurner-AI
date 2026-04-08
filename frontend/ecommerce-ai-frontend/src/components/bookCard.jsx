@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import tracker from '../utils/tracker';
 
-function BookCard({ book, onAddToCart, onBookClick, wishlisted, onToggleWishlist }) {
+function BookCard({ book, onAddToCart, onBuyNow, onBookClick, wishlisted, onToggleWishlist }) {
   const [hoverStart, setHoverStart] = useState(null);
 
   const handleClick = () => {
@@ -45,7 +45,7 @@ function BookCard({ book, onAddToCart, onBookClick, wishlisted, onToggleWishlist
             title={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             onClick={(e) => {
               e.stopPropagation();
-              onToggleWishlist(book.id);
+              onToggleWishlist(book);
             }}
           >
             <Heart size={18} fill={wishlisted ? 'currentColor' : 'none'} />
@@ -75,15 +75,32 @@ function BookCard({ book, onAddToCart, onBookClick, wishlisted, onToggleWishlist
         
         <div className="book-footer">
           <p className="price">${book.price}</p>
-          <button 
-            className="add-to-cart-btn"
-            onClick={(e) => {
-              e.stopPropagation();  // ← ADD THIS (prevents modal from opening)
-              handleClick();
-            }}
-          >
-            Add to Cart
-          </button>
+          <div className="book-actions" style={{display: 'flex', gap: '8px'}}>
+            <button 
+              className="add-to-cart-btn"
+              style={{flex: 1, padding: '8px 12px', fontSize: '0.85rem'}}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClick();
+              }}
+            >
+              Add to Cart
+            </button>
+            <button 
+              className="buy-now-btn"
+              style={{flex: 1, padding: '8px 12px', fontSize: '0.85rem'}}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onBuyNow) {
+                  onBuyNow(book);
+                } else {
+                  handleClick();
+                }
+              }}
+            >
+              Buy Now
+            </button>
+          </div>
         </div>
       </div>
     </div>
