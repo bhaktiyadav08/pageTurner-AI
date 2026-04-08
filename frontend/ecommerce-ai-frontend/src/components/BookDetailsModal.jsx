@@ -19,6 +19,7 @@ function BookDetailsModal({
   allBooks,
   onClose,
   onAddToCart,
+  onBuyNow,
   onSelectBook,
   wishlistIds,
   onToggleWishlist,
@@ -120,7 +121,7 @@ function BookDetailsModal({
             <button
               type="button"
               className={`modal-wishlist-btn ${wishlisted ? 'active' : ''}`}
-              onClick={() => onToggleWishlist?.(book.id)}
+              onClick={() => onToggleWishlist?.(book)}
             >
               <Heart size={18} fill={wishlisted ? 'currentColor' : 'none'} />
               {wishlisted ? 'Saved to wishlist' : 'Add to wishlist'}
@@ -136,18 +137,32 @@ function BookDetailsModal({
               <span>by {book.author}</span>
             </div>
 
-            <div className="modal-price-section">
+            <div className="modal-price-section" style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
               <div className="modal-price">${book.price}</div>
-              <button
-                className="modal-add-to-cart"
-                onClick={() => {
-                  onAddToCart(book);
-                  onClose();
-                }}
-              >
-                <ShoppingCart size={18} />
-                Add to Cart
-              </button>
+              <div style={{display: 'flex', gap: '10px', flex: 1, minWidth: '200px'}}>
+                <button
+                  style={{flex: 1}}
+                  className="modal-add-to-cart"
+                  onClick={() => {
+                    onAddToCart(book);
+                    onClose();
+                  }}
+                >
+                  <ShoppingCart size={18} />
+                  Add to Cart
+                </button>
+                <button
+                  style={{flex: 1}}
+                  className="modal-buy-now buy-now-btn"
+                  onClick={() => {
+                    if (onBuyNow) onBuyNow(book);
+                    else onAddToCart(book);
+                    onClose();
+                  }}
+                >
+                  Buy Now
+                </button>
+              </div>
             </div>
 
             <div className="modal-section">
