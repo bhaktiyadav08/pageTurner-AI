@@ -2,8 +2,6 @@
 
 An intelligent e-commerce platform that tracks user behavior in real-time, engineers ML features, and provides personalized book recommendations using machine learning.
 
-![PageTurner Demo](screenshot.png)
-
 ## 🎯 Project Overview
 
 **PageTurner** is a feature engineering and machine learning project that demonstrates:
