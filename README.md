@@ -106,40 +106,6 @@ Backend runs at: `http://localhost:8000`
 
 ---
 
-## 📁 Project Structure
-```
-pageturner-ai/
-├── frontend/                   # React Frontend
-│   ├── src/
-│   │   ├── components/        # UI Components
-│   │   │   ├── BookCard.jsx
-│   │   │   ├── PersonalityProfile.jsx
-│   │   │   ├── PredictionPanel.jsx
-│   │   │   └── ...
-│   │   ├── utils/             # Feature Engineering
-│   │   │   ├── tracker.js     # Behavior tracking
-│   │   │   ├── featureEngineer.js  # 18 features
-│   │   │   ├── predictor.js   # ML predictions
-│   │   │   └── personalityAnalyzer.js
-│   │   ├── services/
-│   │   │   └── bookService.js # Google Books API
-│   │   └── App.jsx
-│   └── package.json
-│
-├── backend/                    # Python Backend
-│   ├── main.py                # FastAPI server
-│   ├── train_model.py         # ML training
-│   ├── model.pkl              # Trained model
-│   ├── feature_names.json     # Feature list
-│   └── requirements.txt
-│
-├── README.md
-├── FEATURES.md                # Feature engineering docs
-└── .gitignore
-```
-
----
-
 ## 🧪 Feature Engineering
 
 ### 18 Behavioral Features
